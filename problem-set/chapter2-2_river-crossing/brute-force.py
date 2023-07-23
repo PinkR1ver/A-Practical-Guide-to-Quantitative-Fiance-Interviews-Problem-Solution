@@ -1,35 +1,35 @@
 import numpy as np
 
-def time_accmulation(time:np.ndarray, status:np.ndarray, torch:bool):
+dis_list = []
+
+def time_accmulation(time:np.ndarray, status:np.ndarray, torch:bool, dis=0):
     
     if status.all() == 1:
-        return 0
+        dis_list.append(dis)
+        return
     
 
     if torch == 0:
         for i in range(len(status)):
-            single_test = 0
             if status[i] == 0:
                 for j in range(i+1, len(status)):
                     if status[j] == 0:
+
+                        status_copy = status.copy()
+                        status_copy[i] = 1
+                        status_copy[j] = 1
+
+                        time_accmulation(time, status_copy, 1, dis + max(time[i], time[j]))
                         
-                        single_test = 1
-
-                        status[i] = 1
-                        status[j] = 1
-
-                        return (time[i] + time[j]) + time_accmulation(time, status, 1)
-                    
-                if single_test == 0:
-                    return time[i]
                 
     if torch == 1:
         for i in range(len(status)):
             if status[i] == 1:
                 
-                status[i] = 0
+                status_copy = status.copy()
+                status_copy[i] = 0
 
-                return time[i] + time_accmulation(time, status, 0)
+                time_accmulation(time, status_copy, 0, dis + time[i])
 
 
 
@@ -38,6 +38,8 @@ if __name__ == '__main__':
     status = np.zeros(4, dtype=bool)
     torch = 0
 
-    print(time_accmulation(time, status, torch))
+    time_accmulation(time, status, torch)
+
+    print(dis_list)
 
     
