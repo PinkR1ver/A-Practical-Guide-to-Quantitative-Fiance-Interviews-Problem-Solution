@@ -1,58 +1,57 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <climits>
-#include <numeric>
 
-using namespace std;
+std::vector<int> dis_list;
 
-int time_accumulation(vector<int> time, vector<bool> &status, bool torch)
-{
-    int sum = accumulate(status.begin(), status.end(), 0);
-    if (sum == status.size())
-    {
-        return 0;
+void time_accumulation(const std::vector<int>& time, std::vector<bool> status, bool torch, int dis = 0) {
+
+    if (std::all_of(status.begin(), status.end(), [](bool s) { return s; })) {
+        dis_list.push_back(dis);
+        return;
     }
 
-    if (!torch)
-    {
-        int minNum = INT_MAX;
-        for (int i = 0; i < status.size(); i++)
-        {
-            for (int j = i + 1; j < status.size(); j++)
-            {
-                if (status[i] == 0 && status[j] == 0)
-                {
-                    status[i] = 1;
-                    status[j] = 1;
-                    minNum = min(minNum, max(time[i], time[j]) + time_accumulation(time, status, 1));
+    if (torch == 0) {
+        for (size_t i = 0; i < status.size(); ++i) {
+            if (status[i] == 0) {
+                for (size_t j = i + 1; j < status.size(); ++j) {
+                    if (status[j] == 0) {
+
+                        std::vector<bool> status_copy = status;
+                        status_copy[i] = true;
+                        status_copy[j] = true;
+
+                        time_accumulation(time, status_copy, true, dis + std::max(time[i], time[j]));
+                    }
                 }
             }
         }
-        return minNum;
     }
-    else
-    {
-        int minNum = INT_MAX;
-        for (int i = 0; i < status.size(); i++)
-        {
-            if (status[i] == 1)
-            {
-                status[i] = 0;
-                minNum = min(minNum, time[i] + time_accumulation(time, status, 0));
+
+    if (torch == 1) {
+        for (size_t i = 0; i < status.size(); ++i) {
+            if (status[i] == 1) {
+
+                std::vector<bool> status_copy = status;
+                status_copy[i] = false;
+
+                time_accumulation(time, status_copy, false, dis + time[i]);
             }
         }
-        return minNum;
     }
-
-    return 0;
 }
 
-int main()
-{
-    vector<int> time = {1, 2, 5, 10};
-    vector<bool> status(4, 0);
-    bool torch = 0;
-    cout << time_accumulation(time, status, torch) << endl;
+int main() {
+    std::vector<int> time = { 1, 2, 5, 10 };
+    std::vector<bool> status(4, false);
+    bool torch = false;
+
+    time_accumulation(time, status, torch);
+
+    for (int dis : dis_list) {
+        std::cout << dis << " ";
+    }
+    std::cout << std::endl;
+
     return 0;
 }
